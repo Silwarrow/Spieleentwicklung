@@ -162,9 +162,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8bd97681500ee8a4b87e23639bcb7565, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LS_MapGenerator
-  mapWidth: 34
-  mapHeight: 32
-  noiseScale: 2.07
+  mapWidth: 200
+  mapHeight: 200
+  noiseScale: 25
+  octaves: 4
+  persistance: 0.5
+  lacunarity: 1.87
+  seed: 21
+  offset: {x: 0, y: 0}
   autoUpdate: 1
 --- !u!4 &109008297
 Transform:
@@ -393,7 +398,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: -9.83136, y: 6.26531, z: -16.30429}
-  m_LocalScale: {x: 34, y: 1, z: 32}
+  m_LocalScale: {x: 200, y: 1, z: 200}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
