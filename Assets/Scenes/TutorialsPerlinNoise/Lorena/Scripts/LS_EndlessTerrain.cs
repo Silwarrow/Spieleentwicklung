@@ -6,8 +6,11 @@ public class LS_EndlessTerrain : MonoBehaviour
 {
     public const float maxViewDst = 450;
     public Transform viewer;
+    public Material mapMaterial;
 
     public static Vector2 viewerPosition;
+    static LS_MapGenerator mapGenerator;
+
     int chunkSize;
     int chunkVisibleInViewDst;
 
@@ -18,6 +21,7 @@ public class LS_EndlessTerrain : MonoBehaviour
 
     private void Start()
     {
+        mapGenerator = FindAnyObjectByType<LS_MapGenerator>();
         chunkSize = LS_MapGenerator.mapChunkSize - 1;
         chunkVisibleInViewDst = Mathf.RoundToInt(maxViewDst / chunkSize);
     }
@@ -27,6 +31,7 @@ public class LS_EndlessTerrain : MonoBehaviour
         viewerPosition = new Vector2(viewer.position.x, viewer.position.z);
         UpdateVisibleChunks();
     }
+
 
     void UpdateVisibleChunks()
     {
@@ -55,7 +60,7 @@ public class LS_EndlessTerrain : MonoBehaviour
                     }
                 } else
                 {
-                    terrainChunkDictionary.Add(viewedChunkCoord, new TerrainChunk(viewedChunkCoord, chunkSize, transform));
+                    terrainChunkDictionary.Add(viewedChunkCoord, new TerrainChunk(viewedChunkCoord, chunkSize, transform, mapMaterial));
                 }
             }
         }
@@ -68,22 +73,45 @@ public class LS_EndlessTerrain : MonoBehaviour
         Vector2 position;
         Bounds bounds;
 
+        MapData mapData;
+
+        MeshRenderer meshRenderer;
+        MeshFilter meshFilter;
+
+
+
         //konstrukor
-        public TerrainChunk(Vector2 coord, int size, Transform parent) //mit transform parent können wir die Planes in ein Objekt in Inspektor stecken
+        public TerrainChunk(Vector2 coord, int size, Transform parent, Material material) //mit transform parent können wir die Planes in ein Objekt in Inspektor stecken
         {
             position = coord * size;
             bounds = new Bounds(position, Vector2.one * size);
             Vector3 positionV3 = new Vector3(position.x, 0, position.y);
 
-            meshObject = GameObject.CreatePrimitive(PrimitiveType.Plane);
+            meshObject = new GameObject("Terrain Chunk");
+            meshRenderer = meshObject.AddComponent<MeshRenderer>();
+            meshFilter = meshObject.AddComponent<MeshFilter>();
+            meshRenderer.material = material;
+
+
             meshObject.transform.position = positionV3;
             meshObject.transform.parent = parent;
-            //default größe ist 10
-            meshObject.transform.localScale = Vector3.one * size / 10f;
 
             SetVisible(false);
 
+            mapGenerator.RequestMapData(OnMapDataReceived);
         }
+
+        void OnMapDataReceived(MapData mapData)
+        {
+            mapGenerator.RequestMeshData(mapData, OnMeshDataReceived);
+
+        }
+
+        void OnMeshDataReceived(LS.MeshData meshData)
+        {
+            meshFilter.mesh = meshData.CreateMesh();
+        }
+
 
         public void UpdateTerrainChunk()
         {
