@@ -18,7 +18,7 @@ public class LS_MapGenerator : MonoBehaviour
 
    public const int mapChunkSize = 241;
     [Range(0,6)]
-    public int levelOfDetail;
+    public int editorLevelOfDetail;
    public float noiseScale;
 
     public int octaves;
@@ -33,25 +33,25 @@ public class LS_MapGenerator : MonoBehaviour
 
    public bool autoUpdate;
 
-    public LS.TerrainType[] regions;
+    public TerrainType[] regions;
 
     Queue<MapThreadInfo<MapData>> mapDataThreadInfoQueue = new Queue<MapThreadInfo<MapData>>();
-    Queue<MapThreadInfo<LS.MeshData>> meshDataThreadInfoQueue = new Queue<MapThreadInfo<LS.MeshData>>();
+    Queue<MapThreadInfo<MeshData>> meshDataThreadInfoQueue = new Queue<MapThreadInfo<MeshData>>();
 
 
     //Recherchire was threading ist und die funktionen
 
-    public void RequestMapData(Action<MapData> callback)
+    public void RequestMapData(Vector2 centre, Action<MapData> callback)
     {
         ThreadStart threadStart = delegate
         {
-            MapDataThread(callback);
+            MapDataThread(centre, callback);
         };
         new Thread(threadStart).Start();
     }
 
-    void MapDataThread(Action<MapData> callback) {
-        MapData mapData = GenerateMapData();
+    void MapDataThread(Vector2 centre, Action<MapData> callback) {
+        MapData mapData = GenerateMapData(centre);
         //die lock schaut das wenn ein thread diese queue erreicht wärend die queue läuft kann kein anderer threat kann es auch greifen.Es muss erst warten
         lock (mapDataThreadInfoQueue)
         {
@@ -60,21 +60,21 @@ public class LS_MapGenerator : MonoBehaviour
     }
 
 
-    public void RequestMeshData(MapData mapData, Action<LS.MeshData> callback)
+    public void RequestMeshData(MapData mapData,int lod, Action<MeshData> callback)
     {
         ThreadStart threadStart = delegate
         {
-            MeshDataThread(mapData, callback);
+            MeshDataThread(mapData,lod, callback);
         };
         new Thread(threadStart).Start();
     }
 
-    void MeshDataThread(MapData mapData, Action<LS.MeshData> callback)
+    void MeshDataThread(MapData mapData, int lod, Action<MeshData> callback)
     {
-        LS.MeshData meshData = LS_MeshGenerator.GenerateTerrainMesh(mapData.heightMap, meshHeightMultiplier, meshHeightCurve, levelOfDetail);
+        MeshData meshData = LS_MeshGenerator.GenerateTerrainMesh(mapData.heightMap, meshHeightMultiplier, meshHeightCurve, lod);
         lock (meshDataThreadInfoQueue)
         {
-            meshDataThreadInfoQueue.Enqueue(new MapThreadInfo<LS.MeshData>(callback, meshData));
+            meshDataThreadInfoQueue.Enqueue(new MapThreadInfo<MeshData>(callback, meshData));
         }
     }
 
@@ -95,7 +95,7 @@ public class LS_MapGenerator : MonoBehaviour
         {
             for (int i = 0; i < meshDataThreadInfoQueue.Count; i++)
             {
-                MapThreadInfo<LS.MeshData> threadInfo = meshDataThreadInfoQueue.Dequeue();
+                MapThreadInfo<MeshData> threadInfo = meshDataThreadInfoQueue.Dequeue();
                 threadInfo.callback(threadInfo.parameter);
             }
         }
@@ -105,9 +105,9 @@ public class LS_MapGenerator : MonoBehaviour
 
 
 
-    MapData GenerateMapData()
+    MapData GenerateMapData(Vector2 centre)
     {
-        float[,] noiseMap = LS_Noise.GenerateNoiseMap(mapChunkSize, mapChunkSize, seed, noiseScale, octaves, persistance, lacunarity, offset); //vergiss nicht class namen zu ändern! Aufruf vom noise genertor
+        float[,] noiseMap = LS_Noise.GenerateNoiseMap(mapChunkSize, mapChunkSize, seed, noiseScale, octaves, persistance, lacunarity, centre + offset); //vergiss nicht class namen zu ändern! Aufruf vom noise genertor
 
         Color[] colorMap = new Color[mapChunkSize * mapChunkSize];
 
@@ -136,7 +136,7 @@ public class LS_MapGenerator : MonoBehaviour
 
     public void DrawMapInEditor()
     {
-        MapData mapData = GenerateMapData();
+        MapData mapData = GenerateMapData(Vector2.zero);
 
         LS_MapDisplay display = FindAnyObjectByType<LS_MapDisplay>();
         if (drawMode == DrawMode.NoiseMap)
@@ -149,7 +149,7 @@ public class LS_MapGenerator : MonoBehaviour
         }
         else if (drawMode == DrawMode.Mesh)
         {
-            display.DrawMesh(LS_MeshGenerator.GenerateTerrainMesh(mapData.heightMap, meshHeightMultiplier, meshHeightCurve, levelOfDetail), LS_TextureGenerator.TextureFromColorMap(mapData.colorMap, mapChunkSize, mapChunkSize));
+            display.DrawMesh(LS_MeshGenerator.GenerateTerrainMesh(mapData.heightMap, meshHeightMultiplier, meshHeightCurve, editorLevelOfDetail), LS_TextureGenerator.TextureFromColorMap(mapData.colorMap, mapChunkSize, mapChunkSize));
         }
     }
 
@@ -184,8 +184,6 @@ public class LS_MapGenerator : MonoBehaviour
 //End of MapGenerator Ckass
 
 //name space weil sonst clashed mit anderer struct von basti
-namespace LS
-{
     [System.Serializable]
 
     //hier nicht readonly weil sonst sieht man nicht in inspektor
@@ -195,7 +193,6 @@ namespace LS
         public float height;
         public Color color;
     }
-}
 
 public struct MapData
 {

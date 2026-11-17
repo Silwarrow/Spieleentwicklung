@@ -1,30 +1,33 @@
 using UnityEngine;
 
-public static class Bw_TextureGenerator
+namespace Basti
 {
- public static Texture2D TextureFromColorMap(Color[] colorMap, int width, int height)
+    public static class Bw_TextureGenerator
     {
-        Texture2D texture = new Texture2D(width, height);
-        texture.filterMode = FilterMode.Point; // Setzt den Filtermodus auf Point, um eine pixelige Darstellung zu erhalten
-        texture.wrapMode = TextureWrapMode.Clamp; // Setzt den Wrap-Modus auf Clamp, um Kanten zu vermeiden
-        texture.SetPixels(colorMap);
-        texture.Apply();
-        return texture;
-    }
-
-    public static Texture2D TextureFromHeightMap(float[,] heightMap)
-    {
-        int width = heightMap.GetLength(0);
-        int height = heightMap.GetLength(1);
-
-        Color[] colorMap = new Color[width * height]; // Array für die Farben der Textur
-        for (int y = 0; y < height; y++)
+        public static Texture2D TextureFromColorMap(Color[] colorMap, int width, int height)
         {
-            for (int x = 0; x < width; x++)
-            {
-                colorMap[y * width + x] = Color.Lerp(Color.black, Color.white, heightMap[x, y]); // Interpolieren zwischen Schwarz und Weiß basierend auf dem Height-Wert
-            }
+            Texture2D texture = new Texture2D(width, height);
+            texture.filterMode = FilterMode.Point; // Setzt den Filtermodus auf Point, um eine pixelige Darstellung zu erhalten
+            texture.wrapMode = TextureWrapMode.Clamp; // Setzt den Wrap-Modus auf Clamp, um Kanten zu vermeiden
+            texture.SetPixels(colorMap);
+            texture.Apply();
+            return texture;
         }
-        return TextureFromColorMap(colorMap, width, height); // Erstellen der Textur aus dem Color-Array
+
+        public static Texture2D TextureFromHeightMap(float[,] heightMap)
+        {
+            int width = heightMap.GetLength(0);
+            int height = heightMap.GetLength(1);
+
+            Color[] colorMap = new Color[width * height]; // Array für die Farben der Textur
+            for (int y = 0; y < height; y++)
+            {
+                for (int x = 0; x < width; x++)
+                {
+                    colorMap[y * width + x] = Color.Lerp(Color.black, Color.white, heightMap[x, y]); // Interpolieren zwischen Schwarz und Weiß basierend auf dem Height-Wert
+                }
+            }
+            return TextureFromColorMap(colorMap, width, height); // Erstellen der Textur aus dem Color-Array
+        }
     }
 }

@@ -13,7 +13,7 @@ public class LS_MapDisplay : MonoBehaviour
         textureRender.sharedMaterial.mainTexture = texture;
         textureRender.transform.localScale = new Vector3(texture.width, 1, texture.height);
     }
-    public void DrawMesh (LS.MeshData meshData, Texture2D texture)
+    public void DrawMesh (MeshData meshData, Texture2D texture)
     {
         meshFilter.sharedMesh = meshData.CreateMesh();
         meshRenderer.sharedMaterial.mainTexture = texture;

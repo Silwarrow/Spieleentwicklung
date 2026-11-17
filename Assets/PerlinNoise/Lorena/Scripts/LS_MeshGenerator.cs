@@ -1,10 +1,8 @@
-using JetBrains.Annotations;
-using Unity.VisualScripting.Antlr3.Runtime.Tree;
 using UnityEngine;
 
 public static class LS_MeshGenerator
 {
-    public static LS.MeshData GenerateTerrainMesh(float[,] heightMap, float heightMultiplier, AnimationCurve _heightCurve, int levelOfDetail)
+    public static MeshData GenerateTerrainMesh(float[,] heightMap, float heightMultiplier, AnimationCurve _heightCurve, int levelOfDetail)
     {
         AnimationCurve heightCurve = new AnimationCurve(_heightCurve.keys);
         int width = heightMap.GetLength(0);
@@ -17,7 +15,7 @@ public static class LS_MeshGenerator
         int meshSimplificationIncrement = (levelOfDetail == 0) ? 1 : levelOfDetail * 2;
         int verticesPerLine = (width - 1) / meshSimplificationIncrement + 1;
 
-        LS.MeshData meshData = new LS.MeshData(verticesPerLine, verticesPerLine);
+        MeshData meshData = new MeshData(verticesPerLine, verticesPerLine);
         int vertexIndex = 0;
 
 
@@ -44,8 +42,6 @@ public static class LS_MeshGenerator
 
 
 //wieder namespace weil sonst clashed mit code von basti
-namespace LS
-{
     public class MeshData
     {
         public Vector3[] vertices;
@@ -79,7 +75,6 @@ namespace LS
             return mesh;
         }
     }
-}
 
 /* unzentrierte map würde normal aufbauen:
  1 2 3
