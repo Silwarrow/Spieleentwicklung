@@ -41,7 +41,6 @@ public static class LS_MeshGenerator
 }
 
 
-//wieder namespace weil sonst clashed mit code von basti
     public class MeshData
     {
         public Vector3[] vertices;

@@ -11,10 +11,14 @@ public class LS_MapGenerator : MonoBehaviour
     {
         NoiseMap,
         ColorMap,
-        Mesh
+        Mesh,
+        FalloffMap
     }
-
    public DrawMode drawMode;
+
+    public LS_Noise.NormalizeMode normalizeMode;
+
+
 
    public const int mapChunkSize = 241;
     [Range(0,6)]
@@ -28,6 +32,8 @@ public class LS_MapGenerator : MonoBehaviour
     public int seed;
     public Vector2 offset;
 
+    public bool useFalloff;
+
     public float meshHeightMultiplier;
     public AnimationCurve meshHeightCurve; //lässt uns die gravity anpassen wie stark welche level effected werden
 
@@ -35,9 +41,16 @@ public class LS_MapGenerator : MonoBehaviour
 
     public TerrainType[] regions;
 
+    float[,] falloffMap;
+
     Queue<MapThreadInfo<MapData>> mapDataThreadInfoQueue = new Queue<MapThreadInfo<MapData>>();
     Queue<MapThreadInfo<MeshData>> meshDataThreadInfoQueue = new Queue<MapThreadInfo<MeshData>>();
 
+
+    private void Awake()
+    {
+        falloffMap = LS_FalloffGenerator.GenerateFalloffMap(mapChunkSize);
+    }
 
     //Recherchire was threading ist und die funktionen
 
@@ -107,7 +120,7 @@ public class LS_MapGenerator : MonoBehaviour
 
     MapData GenerateMapData(Vector2 centre)
     {
-        float[,] noiseMap = LS_Noise.GenerateNoiseMap(mapChunkSize, mapChunkSize, seed, noiseScale, octaves, persistance, lacunarity, centre + offset); //vergiss nicht class namen zu ändern! Aufruf vom noise genertor
+        float[,] noiseMap = LS_Noise.GenerateNoiseMap(mapChunkSize, mapChunkSize, seed, noiseScale, octaves, persistance, lacunarity, centre + offset, normalizeMode); //vergiss nicht class namen zu ändern! Aufruf vom noise genertor
 
         Color[] colorMap = new Color[mapChunkSize * mapChunkSize];
 
@@ -118,13 +131,20 @@ public class LS_MapGenerator : MonoBehaviour
         {
             for (int x = 0; x < mapChunkSize; x++)
             {
+                if (useFalloff)
+                {
+                    noiseMap[x, y] = Mathf.Clamp01(noiseMap[x, y] - falloffMap[x, y]);
+                }
+
                 float currentHeight = noiseMap[x, y];
                 //checking which region this height falls under
                 for (int i = 0; i < regions.Length; i++)
                 {
-                    if (currentHeight <= regions[i].height)
+                    if (currentHeight >= regions[i].height)
                     {
                         colorMap[y * mapChunkSize + x] = regions[i].color;
+                    } else
+                    {
                         break;
                     }
                 }
@@ -151,6 +171,10 @@ public class LS_MapGenerator : MonoBehaviour
         {
             display.DrawMesh(LS_MeshGenerator.GenerateTerrainMesh(mapData.heightMap, meshHeightMultiplier, meshHeightCurve, editorLevelOfDetail), LS_TextureGenerator.TextureFromColorMap(mapData.colorMap, mapChunkSize, mapChunkSize));
         }
+        else if (drawMode == DrawMode.FalloffMap)
+        {
+            display.DrawTexture(LS_TextureGenerator.TextureFromHeightMap(LS_FalloffGenerator.GenerateFalloffMap(mapChunkSize)));
+        }
     }
 
     private void OnValidate() //clamping für den inspector, wird aufgerufen immer wenn sich ein value ändert
@@ -163,6 +187,7 @@ public class LS_MapGenerator : MonoBehaviour
         {
             octaves = 0;
         }
+        falloffMap = LS_FalloffGenerator.GenerateFalloffMap(mapChunkSize);
     }
 
     struct MapThreadInfo<T> //generic damit es Mapdata und meshdata übernehmen kan
