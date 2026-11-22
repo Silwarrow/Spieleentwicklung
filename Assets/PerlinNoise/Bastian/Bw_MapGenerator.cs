@@ -49,7 +49,7 @@ namespace Basti
                 }
             }
 
-            Bw_MapDisplay display = FindObjectOfType<Bw_MapDisplay>();
+            Bw_MapDisplay display = FindAnyObjectByType<Bw_MapDisplay>();
             if (drawMode == DrawMode.NoiseMap)
             {
                 display.DrawTexture(Bw_TextureGenerator.TextureFromHeightMap(noiseMap));
