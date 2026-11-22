@@ -1,45 +1,47 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
+using System.Collections;
 
 
 public class FlightController : MonoBehaviour
 {
     InputAction flyAction;
-    // Movement along X and Y axes.
-    private float movementX;
-    private float movementY;
-    float speed = 5f;
+    
+    float speed = 30f;
+
+    float xRotationAngle;
+    float zRotationAngle;
 
     // Start is called before the first frame update.
     void Start()
     {
-        Debug.Log("Start ran");
-        transform.position += new Vector3(20f, 20f, 40f);
+        //you can find this action under Edit > Project Settings... > Input System Package
         flyAction = InputSystem.actions.FindAction("Fly");
     }
     
-    void Update()
+    void FixedUpdate()
     {
-        /*var kb = Keyboard.current;
-        Debug.Log($"Update ran; Keyboard.current is {(kb == null ? "NULL" : "present")}");
-
-        if (kb == null) return;
-
-        //movementX = (kb.dKey.isPressed ? 1f : 0f) - (kb.aKey.isPressed ? 1f : 0f);
-        //movementY = (kb.wKey.isPressed ? 1f : 0f) - (kb.sKey.isPressed ? 1f : 0f);
-
-        if (movementX != 0 || movementY != 0)
-            Debug.Log($"Polling sees movement: ({movementX}, {movementY})");
-        */
-
+        //read current input from input device (for keyboard: A/D, W/S)
         Vector2 movementVector = flyAction.ReadValue<Vector2>();
-        //Debug.Log(movementVector);
-        // Store the X and Y components of the movement.
-        movementX = movementVector.x;
-        movementY = movementVector.y;
-        // Create a 3D movement vector using the X and Y inputs.
+
+        //rotate player based on input (may switch to something more intuitive later)
+        //research to do on: yaw, pitch, roll and possible implementations in unity
+        //to do: follow notes on figma further, see if possible to implement
+
+        //convert input to target angles
+        xRotationAngle = movementVector.y * 10;
+        zRotationAngle = movementVector.x * -45;
+        Quaternion targetRotation = Quaternion.Euler(xRotationAngle, 0, zRotationAngle);
+        //tilt player slightly towards target rotation
+        transform.localRotation = Quaternion.Slerp(transform.localRotation, targetRotation, 0.5f);
+
+
+        //move player in world based on input
+        //to do: figure out how to move in y direction (up/down)
+
         Vector3 movement = new Vector3(movementVector.x, 0f, movementVector.y) * speed * Time.deltaTime;
         transform.position += movement;
-        //Debug.Log(movementVector);
+
+        //to do: research ray casting
     }
 }
