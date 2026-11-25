@@ -116,7 +116,7 @@ public static class LS_MeshGenerator
                 }
             }
         }
-
+        meshData.BakeNormals();
         return meshData;
     }
 
@@ -128,6 +128,7 @@ public static class LS_MeshGenerator
         Vector3[] vertices;
         int[] triangles;
         Vector2[] uvs;
+        Vector3[] bakedNormals;
 
         Vector3[] borderVertices;
         int[] borderTriangles;
@@ -239,13 +240,21 @@ public static class LS_MeshGenerator
         return Vector3.Cross(sideAB, sideAC).normalized;
     }
 
+        public void BakeNormals()
+         {
+        bakedNormals = CalculateNormals();
+         }
+
         public Mesh CreateMesh()
         {
             Mesh mesh = new Mesh();
             mesh.vertices = vertices;
             mesh.triangles = triangles;
             mesh.uv = uvs;
-            mesh.normals = CalculateNormals(); //old call -> mesh.RecalculateNormals();
+            mesh.normals = bakedNormals; //old call CalculateNormals(); //old old call -> mesh.RecalculateNormals();
+            /*to speed up the game we move calculatenormals, which takes long, into a seperate thread
+             * In this case in GenerateTerrainMesh because its already in a seperate thread
+             */
             return mesh;
         }
     }
